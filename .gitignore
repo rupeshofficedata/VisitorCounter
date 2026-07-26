@@ -1,0 +1,17 @@
+# Binaries
+kubectl
+vcluster
+get_helm.sh
+kubectl.sha256
+
+# Saved dumps
+curl_response
+
+# Helm chart values (not app code)
+prometheus.yml
+
+# opencode files
+AGENTS.md
+opencode.json
+skills-lock.json
+.agents/
