@@ -5,7 +5,8 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /build
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --user -r requirements.txt
 
 # --- final stage: base image + installed packages + app code only ---
 FROM python:3.13-slim
