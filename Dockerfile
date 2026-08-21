@@ -1,33 +1,37 @@
-# 1. Use the updated, more secure base image recommended by Docker Scout
+# syntax=docker/dockerfile:1
+
+# --- builder stage: installs deps, never ships to the final image ---
+FROM python:3.13-slim AS builder
+
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# --- final stage: base image + installed packages + app code only ---
 FROM python:3.13-slim
 
-# 2. Set environment variables to optimize Python for container environments
+# Set environment variables to optimize Python for container environments
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PATH=/home/appuser/.local/bin:$PATH
 
-# 3. Create a non-root system user and home workspace layout
+# Create a non-root system user and home workspace layout
 RUN useradd --create-home --shell /bin/bash appuser
 
-# 4. Set the working directory context
+# Set the working directory context
 WORKDIR /home/appuser/app
 
-# 5. Leverage Docker layer caching by copying dependencies first
-COPY requirements.txt .
+# Bring in only the installed packages from the builder stage
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
-# 6. Install required packages safely under the root context
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the rest of your application code
+COPY --chown=appuser:appuser . .
 
-# 7. Copy the rest of your application code
-COPY . .
-
-# 8. Shift ownership of all copied files to your non-root operator account
-RUN chown -R appuser:appuser /home/appuser/app
-
-# 9. Force the runtime environment to drop root access privileges
+# Force the runtime environment to drop root access privileges
 USER appuser
 
-# 10. Expose your application port (change if your app uses a different port, e.g., 5000 or 8000)
+# Expose your application port (change if your app uses a different port, e.g., 5000 or 8000)
 EXPOSE 5000
 
-# 11. Run your visitor counter script
+# Run your visitor counter script
 CMD ["python", "app.py"]

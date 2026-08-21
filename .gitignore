@@ -15,3 +15,9 @@ AGENTS.md
 opencode.json
 skills-lock.json
 .agents/
+.claude/skills/
+
+# Personal interview prep / learning materials (not project code)
+DevopsMD/
+DevopsMD.zip
+DevOps-Mastery-Vault/

@@ -1,0 +1,11 @@
+.git
+.gitignore
+DevOps-Mastery-Vault/
+DevopsMD/
+DevopsMD.zip
+.claude/
+.agents/
+.vscode/
+skills-lock.json
+__pycache__/
+*.pyc
