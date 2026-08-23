@@ -35,8 +35,9 @@ USER appuser
 EXPOSE 5000
 
 # Report container health based on whether the app actually answers HTTP requests
+# (hits /healthz, not /, so healthchecks don't inflate the visitor counter)
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/healthz')" || exit 1
 
 # Run your visitor counter script
 CMD ["python", "app.py"]

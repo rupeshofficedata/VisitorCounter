@@ -37,5 +37,9 @@ def hello():
     mode = "Redis (prod)" if USE_REDIS else "Local (dev)"
     return f'Hello World! This page has been viewed {count} times. [Mode: {mode}]\n'
 
+@app.route('/healthz')
+def healthz():
+    return 'OK\n'
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
