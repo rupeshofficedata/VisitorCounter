@@ -5,7 +5,10 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /build
 COPY requirements.txt .
+# Upgrade setuptools first to clear CVE-2025-47273 (path traversal in PackageIndex)
+# inherited from the base image's bundled version.
 RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --user --upgrade setuptools && \
     pip install --user -r requirements.txt
 
 # --- final stage: base image + installed packages + app code only ---
