@@ -3,6 +3,7 @@ import time
 from flask import Flask
 
 USE_REDIS = os.getenv("USE_REDIS", "true").lower() == "true"
+APP_VERSION = os.getenv("APP_VERSION", "dev")
 
 if USE_REDIS:
     from redis import Redis
@@ -40,6 +41,10 @@ def hello():
 @app.route('/healthz')
 def healthz():
     return 'OK\n'
+
+@app.route('/version')
+def version():
+    return {'version': APP_VERSION}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
