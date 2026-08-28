@@ -21,8 +21,9 @@ def get_hit_count():
         local_hits += 1
         return local_hits
 
-    # Redis mode with retry logic
-    retries = 5
+    # Redis mode with retry logic (tuned down from 5 — 0.5s * 5 = 2.5s worst-case
+    # startup stall was longer than needed for local Compose networking)
+    retries = 3
     while True:
         try:
             return cache.incr('hits')
