@@ -35,7 +35,7 @@ def get_hit_count():
 @app.route('/')
 def hello():
     count = get_hit_count()
-    mode = "Redis (prod)" if USE_REDIS else "Local (dev)"
+    mode = "🔴 Redis (prod)" if USE_REDIS else "💻 Local (dev)"
     return f'Hello World! This page has been viewed {count} times. [Mode: {mode}]\n'
 
 @app.route('/healthz')
