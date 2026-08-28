@@ -12,6 +12,9 @@ simple in-memory counter (development, no dependencies required).
   unavailable at startup.
 - When `USE_REDIS=false`, the counter is a plain in-process variable — it
   resets whenever the app restarts and isn't shared across workers.
+- `GET /healthz` returns a plain `OK` with no side effects — used by the
+  Dockerfile's `HEALTHCHECK` so health probes don't inflate the counter.
+- `GET /version` returns `{"version": "<APP_VERSION>"}` as JSON.
 
 ## Requirements
 
@@ -57,9 +60,10 @@ The app listens on `0.0.0.0:5000` by default.
 
 ## Configuration
 
-| Env var     | Default | Description                                      |
-|-------------|---------|---------------------------------------------------|
-| `USE_REDIS` | `true`  | `true` to use Redis, `false` for an in-memory counter |
+| Env var       | Default | Description                                      |
+|---------------|---------|---------------------------------------------------|
+| `USE_REDIS`   | `true`  | `true` to use Redis, `false` for an in-memory counter |
+| `APP_VERSION` | `dev`   | Reported by `GET /version`; set to a real version/tag in CI/CD builds |
 
 ## Project structure
 
