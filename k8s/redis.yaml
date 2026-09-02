@@ -24,6 +24,15 @@ spec:
             limits:
               cpu: 200m
               memory: 64Mi
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      # emptyDir is a stopgap: survives container restarts within the same Pod,
+      # but is wiped if the Pod itself is deleted/rescheduled. Real production
+      # fix is a PersistentVolumeClaim on durable storage — a separate topic.
+      volumes:
+        - name: redis-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
