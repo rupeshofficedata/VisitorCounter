@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: visitorcounter-config
+data:
+  USE_REDIS: "true"
+  APP_VERSION: "v1.0.0"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visitorcounter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: visitorcounter
+  template:
+    metadata:
+      labels:
+        app: visitorcounter
+    spec:
+      imagePullSecrets:
+        - name: ghcr-cred
+      containers:
+        - name: visitorcounter
+          image: ghcr.io/rupeshofficedata/visitorcounter:day3
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: visitorcounter-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: visitorcounter
+spec:
+  selector:
+    app: visitorcounter
+  ports:
+    - port: 5000
+      targetPort: 5000
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: visitorcounter
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: visitorcounter
+  minReplicas: 3
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: visitorcounter
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: visitorcounter

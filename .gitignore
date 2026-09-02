@@ -25,3 +25,10 @@ skills-lock.json
 DevopsMD/
 DevopsMD.zip
 DevOps-Mastery-Vault/
+
+# Terraform local state and provider plugin cache - never committed.
+# .terraform.lock.hcl IS committed (pins exact provider versions for everyone).
+terraform/**/.terraform/
+terraform/**/terraform.tfstate
+terraform/**/terraform.tfstate.backup
+terraform/**/*.tfplan
