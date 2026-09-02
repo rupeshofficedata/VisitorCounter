@@ -67,3 +67,33 @@ resource "aws_vpc" "visitorcounter" {
     Name = "visitorcounter"
   }
 }
+
+# First real IAM identity for VisitorCounter's infra: an IAM ROLE (not a
+# user) - the pattern real workloads use, since a role is assumed
+# temporarily by something else (here, an EC2 instance) rather than
+# holding permanent long-lived credentials the way an IAM user would.
+# Deliberately no permissions attached yet - just the identity and WHO is
+# allowed to assume it. Real least-privilege policy design is a Day 7 topic.
+resource "aws_iam_role" "visitorcounter" {
+  name = "visitorcounter-role"
+
+  # The trust policy: WHO is allowed to assume this role. Here, only the
+  # EC2 service itself (i.e. an EC2 instance can pick up this role's
+  # identity) - not any arbitrary IAM user or account.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "visitorcounter"
+  }
+}
