@@ -2,8 +2,12 @@
 # version instead of silently picking up a new major release.
 #
 # `key = "environments/dev/terraform.tfstate"` is what actually gives dev
-# its own isolated state, separate from prod's - same bucket/lock table
-# from 01-bootstrap-state, different path inside it.
+# its own isolated state, separate from prod's - same bucket, different
+# path inside it.
+#
+# `use_lockfile = true` is the newer S3-native locking (Terraform 1.10+):
+# a small `.tflock` file written next to the state object, using S3's own
+# conditional-write guarantee, instead of a separate DynamoDB table.
 terraform {
   required_providers {
     aws = {
@@ -13,10 +17,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "visitorcounter-tfstate"
-    key            = "environments/dev/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "visitorcounter-tfstate-lock"
+    bucket       = "visitorcounter-tfstate"
+    key          = "environments/dev/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
 
     access_key                  = "test"
     secret_key                  = "test"
@@ -26,8 +30,7 @@ terraform {
     use_path_style               = true
 
     endpoints = {
-      s3       = "http://localhost.floci.io:4566"
-      dynamodb = "http://localhost.floci.io:4566"
+      s3 = "http://localhost.floci.io:4566"
     }
   }
 }
