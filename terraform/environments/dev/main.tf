@@ -75,3 +75,11 @@ output "vpc_id" {
 output "role_arn" {
   value = module.app_infra.role_arn
 }
+
+output "public_subnet_ids" {
+  value = module.app_infra.public_subnet_ids
+}
+
+output "private_subnet_ids" {
+  value = module.app_infra.private_subnet_ids
+}
