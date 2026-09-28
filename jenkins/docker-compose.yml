@@ -1,0 +1,38 @@
+# Jenkins CI server, kept separate from docker-compose.yml at repo root -
+# Jenkins is tooling with its own lifecycle (start once, keep running across
+# many builds), not one of VisitorCounter's dev/prod app profiles.
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: unless-stopped
+
+    # Container defaults to UTC otherwise - build timestamps and later cron/
+    # poll-SCM trigger schedules (Day 4) both read the controller's own TZ.
+    environment:
+      - TZ=Asia/Kolkata
+
+    ports:
+      - "9090:8080"   # Jenkins web UI - host port 9090, 8080 and 8081 both already taken on this machine
+      - "50000:50000" # agent<->controller port, needed once we add build agents
+
+    volumes:
+      # Named volume: Jenkins config/jobs/plugins survive container recreation.
+      - jenkins_home:/var/jenkins_home
+      # DooD (Docker-outside-of-Docker): bind-mount the HOST's socket so
+      # Jenkins builds run as sibling containers on the host's own Docker
+      # daemon, instead of needing a nested Docker install inside Jenkins.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # The Jenkins image ships no docker CLI - bind-mount the host's binary
+      # in so `docker build`/`docker run` steps in jobs actually resolve.
+      - ${DOCKER_BIN}:/usr/bin/docker
+
+    # Jenkins runs as a non-root user inside the container. Adding that user
+    # to the host's docker-group GID is what grants socket permission without
+    # sudo - host-specific, hence read from .env rather than hardcoded here.
+    group_add:
+      - "${DOCKER_GID}"
+
+# Named volume backing /var/jenkins_home above.
+volumes:
+  jenkins_home:
