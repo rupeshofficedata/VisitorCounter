@@ -26,6 +26,12 @@ services:
       # The Jenkins image ships no docker CLI - bind-mount the host's binary
       # in so `docker build`/`docker run` steps in jobs actually resolve.
       - ${DOCKER_BIN}:/usr/bin/docker
+      # CLI plugins (buildx, compose) are separate binaries the docker CLI
+      # discovers by directory - without this, `docker build` inside Jenkins
+      # falls back to the deprecated legacy builder. Read-only: Jenkins only
+      # needs to execute them. Go binaries are static, so host-built ones run
+      # fine inside the Debian-based Jenkins image.
+      - ${DOCKER_PLUGINS}:/usr/lib/docker/cli-plugins:ro
 
     # Jenkins runs as a non-root user inside the container. Adding that user
     # to the host's docker-group GID is what grants socket permission without
