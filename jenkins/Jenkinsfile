@@ -1,0 +1,55 @@
+pipeline{
+    agent any
+    environment{
+        DOCKERHUB_USER = credentials('DockerHubUser')
+        BRANCH = "${env.BRANCH_NAME}"
+    }
+    stages{
+        stage('checkout'){
+            steps{
+                echo 'Checking out code...'
+                git branch: 'main', credentialsId: 'DockerHub', poll: false, url: 'https://github.com/rupeshofficedata/VisitorCounter.git'
+            }
+        }
+        stage('Build'){
+            steps{
+                echo 'Building...'
+                sh 'docker build --label ci=jenkins --label build=${BUILD_NUMBER} -t $DOCKERHUB_USER/visitorcounter:${BRANCH}-${BUILD_NUMBER} .'
+            }
+        }
+        stage('Push'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'DockerHub', passwordVariable: 'DOCKERHUB_PWD', usernameVariable: 'DOCKERHUB_USR')]) {
+                // Login to DockerHub
+                sh 'echo $DOCKERHUB_PWD | docker login -u $DOCKERHUB_USR --password-stdin'
+                echo 'Pushing...'
+                sh 'docker push $DOCKERHUB_USER/visitorcounter:${BRANCH}-${BUILD_NUMBER}'
+                sh 'docker push $DOCKERHUB_USER/visitorcounter:${BRANCH}-latest'
+                }
+
+            }
+        }
+        stage('Deploy'){
+            steps{
+                echo 'removing old containers...'
+                sh 'docker rmi $DOCKERHUB_USER/visitorcounter:${BRANCH}-${BUILD_NUMBER}'
+                sh 'docker rm -f visitorcounter-jenkins || true'
+                echo 'Deploying...'
+                sh 'docker run -d --name visitorcounter-jenkins --network jenkins_default -p 5002:5000 -e USE_REDIS=false rupeshkumar2025/visitorcounter:${BRANCH}-${BUILD_NUMBER}'
+            }
+        }
+        stage('Test'){
+            steps{
+                echo 'Testing...'
+                timeout 30 sh -c 'until curl -sf http://visitorcounter-jenkins:5000/healthz; do sleep 1; done'
+                sh 'curl -s http://visitorcounter-jenkins:5000/'
+            }
+        }
+        stage('CleanUp'){
+            steps{
+                echo 'Cleaning up workspace...'
+                sh 'rm -rf "$WORKSPACE"/* || true'
+            }
+        }
+    }
+}
